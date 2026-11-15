@@ -403,11 +403,11 @@ const pendingIcons={};
 let catColor={},PLAT={},platTab="all",sortBy="";
 
 function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),4200)}
-async function cached(key,ttl,fn){
+async function cached(key,ttl,fn,maxStale){
   let c=null;try{c=JSON.parse(localStorage.getItem(key))}catch(e){}
   if(c&&Date.now()-c.t<ttl)return c.d;
   try{const d=await fn();try{localStorage.setItem(key,JSON.stringify({t:Date.now(),d}))}catch(e){}return d}
-  catch(e){if(c)return c.d;throw e}
+  catch(e){if(c&&(!maxStale||Date.now()-c.t<maxStale))return c.d;throw e}   // GitHub failed: old answer is used only if it is not too old (maxStale)
 }
 const iconHtml=i=>{const s=pendingIcons[i]||i||"";
   return /\.(png|jpe?g|svg|webp|gif|ico)$/i.test(s)||/^(https?:|data:)/.test(s)?`<img src="${esc(s)}" alt="" onerror="this.replaceWith('📦')">`:esc(s)};
@@ -570,9 +570,12 @@ async function findFiles(name){
   const base=`https://api.github.com/repos/${USERNAME}/${name}`;
   const rel=await fetch(base+"/releases?per_page=15");
   if(!rel.ok)throw rel.status;
+  let first=true;
   for(const r of await rel.json()){
     if(r.draft)continue;
-    const f=(r.assets||[]).filter(a=>!SKIP.test(a.name)).map(a=>({name:a.name,url:a.browser_download_url}));
+    // newest normal release: use GitHub's "latest" link, so the button always gives the newest build (never an old build number)
+    const lat=first&&!r.prerelease;first=false;
+    const f=(r.assets||[]).filter(a=>!SKIP.test(a.name)).map(a=>({name:a.name,url:lat?`https://github.com/${USERNAME}/${name}/releases/latest/download/`+encodeURIComponent(a.name):a.browser_download_url}));
     if(f.length)return f;
   }
   const ct=await fetch(base+"/contents/");
@@ -582,7 +585,7 @@ async function findFiles(name){
   }
   return[];
 }
-const getFiles=name=>cached("dl_"+name,10*60e3,async()=>{const f=await findFiles(name);if(!f.length)throw"none";return f});
+const getFiles=name=>cached("dl_"+name,10*60e3,async()=>{const f=await findFiles(name);if(!f.length)throw"none";return f},36e5);
 async function download(r,el,plat){
   const ov=CFG.apps[r.name]||{},go=u=>{location.href=u};
   const up=plat==="android"?(ov.uploadAndroid||(APK.test(ov.upload||"")?ov.upload:"")):plat==="pc"?(ov.uploadPC||(ov.upload&&!APK.test(ov.upload)?ov.upload:"")):"";
