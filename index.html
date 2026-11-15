@@ -365,8 +365,10 @@ body.fm .hero{display:none}body.fm .wrap{margin-top:1rem}
 
 <script>
 /* ===== Basic settings (change only if your GitHub names change) ===== */
-const USERNAME="imranulholque";
-const SITE_REPO="imranulholque.github.io";
+const FALLBACK_USER="imranulhoquesabbir";   /* used only when the page is NOT opened from <name>.github.io (local file, custom domain) */
+/* The username is read from the address itself (<name>.github.io), so a GitHub username change can never leave a wrong name in here */
+const USERNAME=/^[a-z0-9-]+\.github\.io$/i.test(location.hostname)?location.hostname.split(".")[0]:FALLBACK_USER;
+const SITE_REPO=USERNAME+".github.io";   /* the site repository must be called exactly <username>.github.io */
 const BRANCH="main";
 const OWNER="Imranul Hoque Sabbir";
 const AVATAR="https://github.com/"+USERNAME+".png?size=400";
