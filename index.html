@@ -629,7 +629,13 @@ async function load(){
         topics:r.topics,language:r.language,homepage:r.homepage,created_at:r.created_at}));
     }));
   }catch(e){
-    $("grid").innerHTML='<div class="msg">Could not load software right now. Please try again in a few minutes.</div>';;return}
+    /* GitHub API busy/limited (or name changed): still show the software listed in config.json so the site is never empty */
+    console.warn("GitHub repo list failed:",e);
+    allRepos=Object.keys(CFG.apps).filter(n=>n!==SITE_REPO).map(n=>({name:n,description:"",fork:false,archived:false,topics:[],language:"",homepage:"",created_at:"2000-01-01T00:00:00Z"}));
+    if(!allRepos.length){
+      $("grid").innerHTML='<div class="msg">Could not load software right now (GitHub error: '+esc(e)+', user: '+esc(USERNAME)+'). Please try again in a few minutes.</div>';return}
+    toast("GitHub ekhon busy — saved list dekhano hocche. Pore refresh koro.");
+  }
   savedStr=JSON.stringify(cleaned());
   runCustomJs();
   render();
