@@ -49,6 +49,9 @@
       "category": "Android Apps",
       "hide": true
     },
+    "imageDetection-Data": {
+      "hide": true
+    },
     "imageFixer3": {
       "name": "Image Fixer",
       "icon": "🖼️",
