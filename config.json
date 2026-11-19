@@ -38,7 +38,8 @@
     "ShareUp": {
       "name": "ShareUp",
       "icon": "🚀",
-      "category": "Sharing"
+      "category": "Sharing",
+      "hide": true
     },
     "VideoStream": {
       "hide": true
